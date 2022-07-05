@@ -10,42 +10,54 @@ impl Diff {
 	}
 }
 
-fn _diff_compress(bytes: Vec<u8>, max_diff: u8) -> Vec<Vec<u8>> {
-	let result = bytes.iter().cloned().enumerate().fold(
-		(vec![vec![]], 0_usize),
-		|(mut sequences, sequence_start), (index, byte)| {
-			let sequence = &bytes[sequence_start..index];
+// TODO: Should return Vec<&[u8]>
+fn _chunks_by_diff(bytes: Vec<u8>, max_diff: u8) -> Vec<Vec<u8>> {
+	bytes
+		.iter()
+		.cloned() // TODO: Remove
+		.enumerate()
+		.fold(
+			(vec![vec![]], 0_usize),
+			|(mut chunks, chunk_start), (index, byte)| {
+				let chunk = &bytes[chunk_start..index];
 
-			if !sequence.is_empty() {
-				println!("\nSequence: {:?}", sequence);
+				if !chunk.is_empty() {
+					if let Some(next_byte) = bytes.get(index) {
+						let sum = chunk.iter().fold(0, |acc, v| acc + *v as usize);
+						let avrg = (sum / chunk.len()) as u8;
 
-				if let Some(next_byte) = bytes.get(index) {
-					println!("Next Byte: {:?}", next_byte);
+						let next_diff = avrg.abs_diff(*next_byte);
+						let diff_too_big = next_diff > max_diff;
 
-					let sum = sequence.iter().fold(0_usize, |acc, v| acc + *v as usize);
-					let avrg = (sum / sequence.len()) as u8;
-					println!("Avrg: {:?}", avrg);
-
-					let next_diff = avrg.abs_diff(*next_byte);
-					let diff_too_big = next_diff > max_diff;
-					println!("Next Diff: {:?} [{}]", next_diff, diff_too_big);
-
-					if diff_too_big {
-						println!("-> Creating new sequence");
-						sequences.push(Vec::new());
-						sequences.last_mut().unwrap().push(byte);
-						return (sequences, index);
+						if diff_too_big {
+							chunks.push(Vec::new());
+							chunks.last_mut().unwrap().push(byte);
+							return (chunks, index);
+						}
 					}
 				}
-			}
 
-			sequences.last_mut().unwrap().push(byte);
-			(sequences, sequence_start)
-		},
-	);
+				chunks.last_mut().unwrap().push(byte);
+				(chunks, chunk_start)
+			},
+		)
+		.0
+}
 
-	println!("\n=> {:?}", result);
-	result.0
+fn _diff_compress(bytes: Vec<u8>, max_diff: u8) -> Vec<Diff> {
+	let chunks = _chunks_by_diff(bytes, max_diff);
+
+	let mut result = Vec::new();
+	for chunk in chunks {
+		let average = (chunk.iter().fold(0, |acc, v| acc + *v as usize) / chunk.len()) as u8;
+		result.push(Diff::_new(
+			average,
+			// TODO: Make diffe signed
+			// chunk.iter().map(|byte| byte - average).collect(),
+			chunk.iter().map(|byte| byte.abs_diff(average)).collect(),
+		))
+	}
+	result
 }
 
 #[cfg(test)]
@@ -61,7 +73,12 @@ mod test {
 
 		assert_eq!(
 			compressed,
-			vec![vec![54, 56, 48, 50, 52, 49], vec![62], vec![205], vec![255]]
+			vec![
+				Diff::_new(51, vec![3, 5, /*-*/ 3, /*-*/ 1, 1, /*-*/ 2]),
+				Diff::_new(62, vec![0]),
+				Diff::_new(205, vec![0]),
+				Diff::_new(255, vec![0])
+			]
 		)
 	}
 }
