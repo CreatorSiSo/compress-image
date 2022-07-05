@@ -11,8 +11,6 @@
 // 	128..=255 => {}
 // }
 
-struct SplitState {}
-
 pub fn fold(bytes: Vec<u8>) -> Option<Vec<u8>> {
 	// let iter = bytes.iter();
 	// let mut max = 0;
