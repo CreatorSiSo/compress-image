@@ -1,17 +1,14 @@
-#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
-struct Diff {
-	average: u8,
-	diff: Vec<u8>, // TODO: Make this signed
-}
-
-impl Diff {
-	fn _new(average: u8, diff: Vec<u8>) -> Self {
-		Self { average, diff }
-	}
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Diff {
+	Yes {
+		average: u8,
+		diff: Vec<i8>, // TODO: Make this signed
+	},
+	No(u8),
 }
 
 // TODO: Should return Vec<&[u8]>
-fn _chunks_by_diff(bytes: Vec<u8>, max_diff: u8) -> Vec<Vec<u8>> {
+fn chunks_by_diff(bytes: Vec<u8>, max_diff: u8) -> Vec<Vec<u8>> {
 	bytes
 		.iter()
 		.cloned() // TODO: Remove
@@ -44,18 +41,24 @@ fn _chunks_by_diff(bytes: Vec<u8>, max_diff: u8) -> Vec<Vec<u8>> {
 		.0
 }
 
-fn _diff_compress(bytes: Vec<u8>, max_diff: u8) -> Vec<Diff> {
-	let chunks = _chunks_by_diff(bytes, max_diff);
+pub fn diff(bytes: Vec<u8>, max_diff: u8) -> Vec<Diff> {
+	let chunks = chunks_by_diff(bytes, max_diff);
 
 	let mut result = Vec::new();
 	for chunk in chunks {
+		if chunk.len() == 1 {
+			result.push(Diff::No(chunk[0]));
+			continue;
+		}
+
 		let average = (chunk.iter().fold(0, |acc, v| acc + *v as usize) / chunk.len()) as u8;
-		result.push(Diff::_new(
-			average,
-			// TODO: Make diffe signed
-			// chunk.iter().map(|byte| byte - average).collect(),
-			chunk.iter().map(|byte| byte.abs_diff(average)).collect(),
-		))
+		// TODO: Make diffe signed
+		// chunk.iter().map(|byte| byte - average).collect(),
+		let diff = chunk
+			.iter()
+			.map(|byte| (*byte as i16 - average as i16) as i8)
+			.collect();
+		result.push(Diff::Yes { average, diff });
 	}
 	result
 }
@@ -69,15 +72,18 @@ mod test {
 		/*  avrg   =     [53                        ][205][255]*/
 		/*  diffs  =     [ 1,  3, -5, -3, -1, -4,  9][  0][  0]*/
 		let values = vec![54, 56, 48, 50, 52, 49, 62, 205, 255];
-		let compressed = _diff_compress(values, 10);
+		let compressed = diff(values, 10);
 
 		assert_eq!(
 			compressed,
 			vec![
-				Diff::_new(51, vec![3, 5, /*-*/ 3, /*-*/ 1, 1, /*-*/ 2]),
-				Diff::_new(62, vec![0]),
-				Diff::_new(205, vec![0]),
-				Diff::_new(255, vec![0])
+				Diff::Yes {
+					average: 51,
+					diff: vec![3, 5, -3, -1, 1, -2]
+				},
+				Diff::No(62),
+				Diff::No(205),
+				Diff::No(255)
 			]
 		)
 	}

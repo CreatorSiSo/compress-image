@@ -1,20 +1,21 @@
 use std::collections::HashMap;
 
-pub struct Image<'a> {
+#[derive(Debug)]
+pub struct Image {
 	pub width: u32,
 	pub height: u32,
-	pub channels: HashMap<&'a str, Vec<f32>>,
+	pub channels: HashMap<String, Vec<f32>>,
 }
 
-impl Image<'_> {
-	pub fn from_rgba(width: u32, height: u32, bytes: &Vec<u8>) -> Self {
+impl Image {
+	pub fn from_rgba(width: u32, height: u32, bytes: &[u8]) -> Self {
 		let mut red = Vec::default();
 		let mut green = Vec::default();
 		let mut blue = Vec::default();
 		let mut alpha = Vec::default();
 
 		for (index, byte) in bytes.iter().enumerate() {
-			let value = (byte / 255) as f32;
+			let value = *byte as f32 / 255.;
 
 			match index % 4 {
 				0 => red.push(value),
@@ -29,10 +30,10 @@ impl Image<'_> {
 			width,
 			height,
 			channels: HashMap::from([
-				("red", red),
-				("green", green),
-				("blue", blue),
-				("alpha", alpha),
+				("red".into(), red),
+				("green".into(), green),
+				("blue".into(), blue),
+				("alpha".into(), alpha),
 			]),
 		}
 	}
