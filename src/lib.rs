@@ -1,10 +1,6 @@
-mod diff;
-mod fold;
+mod consts;
 mod image;
 
 pub use image::*;
 
-pub mod compress {
-	pub use super::diff::*;
-	pub use super::fold::*;
-}
+pub mod compress {}
