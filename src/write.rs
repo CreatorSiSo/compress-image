@@ -38,6 +38,7 @@ mod test {
 	#[test]
 	fn write_header() {
 		let mut buf = Vec::new();
+		// TODO Test writing channel names.
 		write::header(&mut buf, 1821, 1821, vec![]);
 
 		assert_eq!(
