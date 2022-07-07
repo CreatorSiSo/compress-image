@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use crate::consts::marker;
-use crate::encode::*;
+use crate::write;
 
 #[derive(Debug)]
 pub struct Image {
@@ -44,17 +43,10 @@ impl Image {
 	pub fn encode(&self) -> Vec<u8> {
 		let mut encoded = Vec::new();
 
-		write_header(&mut encoded, self.width, self.height, &self.channels);
-		write_values(&mut encoded, &[24, 38, 10, 2]);
-		write_run(&mut encoded, 57, 200);
-
-		{
-			encoded.push(254);
-			encoded.extend_from_slice(marker::DIFF);
-			encoded.push(100);
-			encoded.push(5);
-			encoded.push(55);
-		}
+		write::header(&mut encoded, self.width, self.height, &self.channels);
+		write::values(&mut encoded, &[24, 38, 10, 2]);
+		write::run(&mut encoded, 57, 200);
+		write::diffs(&mut encoded, 254, &[-9, 0, 5, 16, -11]);
 
 		encoded
 	}

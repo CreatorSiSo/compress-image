@@ -1,6 +1,6 @@
 mod consts;
-mod encode;
 mod image;
+mod write;
 
 pub use image::*;
 

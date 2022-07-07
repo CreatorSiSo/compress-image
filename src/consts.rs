@@ -15,18 +15,18 @@ pub mod marker {
 	/// ```ignore
 	/// Byte[0] = 0b11111110
 	/// Byte[1] = 0b11111110
+	/// Byte[2] = value
+	/// Byte[3] = repeats
+	/// ```
+	pub const RUN: &[u8; 2] = &[0b11111110; 2];
+
+	/// ```ignore
+	/// Byte[0] = 0b11111100
+	/// Byte[1] = 0b11111100
 	/// Byte[2] = base
 	/// Byte[3..] = diffs
 	/// ```
 	/// TODO: Smaller diff range and fit two diffs into one byte
 	/// 0..255 => -127..128
-	pub const DIFF: &[u8; 2] = &[0b11111110; 2];
-
-	/// ```ignore
-	/// Byte[0] = value
-	/// Byte[1] = 0b11111100
-	/// Byte[2] = 0b11111100
-	/// Byte[3] = repeats
-	/// ```
-	pub const RUN: &[u8; 2] = &[0b11111110; 2];
+	pub const DIFF: &[u8; 2] = &[0b11111100; 2];
 }
