@@ -1,12 +1,15 @@
-use std::collections::HashMap;
-
 use crate::consts;
 
-pub fn header(buf: &mut Vec<u8>, width: u32, height: u32, _channels: &HashMap<String, Vec<f32>>) {
+pub fn header(buf: &mut Vec<u8>, width: u32, height: u32, channel_names: Vec<&[u8]>) {
 	buf.extend_from_slice(consts::MAGIC);
 	buf.extend_from_slice(&width.to_be_bytes());
 	buf.extend_from_slice(&height.to_be_bytes());
-	// TODO Write list of channels
+
+	// TODO Ensure that nothing breaks if the same byte is repeated
+	for channel_name in channel_names {
+		buf.extend_from_slice(channel_name);
+		// TODO Use seperation markers to know when a name ends
+	}
 }
 
 pub fn values(buf: &mut Vec<u8>, values: &[u8]) {
@@ -14,7 +17,7 @@ pub fn values(buf: &mut Vec<u8>, values: &[u8]) {
 	buf.extend_from_slice(values);
 }
 
-/// TODO ensure that nothing breaks if value and number of repeats are the same
+/// TODO Ensure that nothing breaks if value and number of repeats are the same
 pub fn run(buf: &mut Vec<u8>, value: u8, repeats: u8) {
 	buf.extend_from_slice(consts::marker::RUN);
 	buf.push(value);
@@ -30,14 +33,12 @@ pub fn diffs(buf: &mut Vec<u8>, base: u8, diffs: &[i8]) {
 
 #[cfg(test)]
 mod test {
-	use std::collections::HashMap;
-
 	use crate::write;
 
 	#[test]
 	fn write_header() {
 		let mut buf = Vec::new();
-		write::header(&mut buf, 1821, 1821, &HashMap::new());
+		write::header(&mut buf, 1821, 1821, vec![]);
 
 		assert_eq!(
 			buf,

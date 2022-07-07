@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use crate::write;
-
 #[derive(Debug)]
 pub struct Image {
 	pub width: u32,
@@ -38,16 +36,5 @@ impl Image {
 				("alpha".into(), alpha),
 			]),
 		}
-	}
-
-	pub fn encode(&self) -> Vec<u8> {
-		let mut encoded = Vec::new();
-
-		write::header(&mut encoded, self.width, self.height, &self.channels);
-		write::values(&mut encoded, &[24, 38, 10, 2]);
-		write::run(&mut encoded, 57, 200);
-		write::diffs(&mut encoded, 254, &[-9, 0, 5, 16, -11]);
-
-		encoded
 	}
 }
